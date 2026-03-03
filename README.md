@@ -2,49 +2,36 @@
 **By:** Aziz Rahman  
 
 ## Project Overview
-This repository contains the implementation and analysis of two language models: a Statistical Trigram Language Model and a Recurrent Neural Network (RNN) Language Model. Both models were trained to predict the next token in a sequence using the NLTK Brown corpus (news category). 
+This repository contains the implementation and analysis of two language models: a Statistical Trigram Language Model and a Recurrent Neural Network (RNN) Language Model. Both models were trained to predict the next token in a sequence using the NLTK Brown corpus (news category) to compare statistical versus neural approaches on a relatively small dataset.
 
-The purpose of this project is to compare the performance, text generation capabilities, and perplexity of statistical vs. neural approaches on a relatively small dataset.
+## Repository Structure & The Notebooks
+This repository includes two distinct Jupyter Notebooks to showcase the development process and the final structured deliverable:
 
----
+### 1. `practice_code(optional)/AIG230_assignment6_AzizRahman.ipynb`
+This is the initial practice scratchpad. It contains the raw, ground-up implementation of the assignment concepts, including:
+* **Data Preparation (Part D):** The pipeline for loading, lowercasing, and tokenizing the Brown corpus, including adding `<bos>`, `<eos>`, and `<unk>` special tokens.
+* **Statistical N-gram Model (Part A):** The implementation of the optional Trigram model using `nltk.lm` with Laplace (Add-1) smoothing, alongside perplexity evaluation and text generation.
+* **Initial RNN Build:** The first draft of the PyTorch RNN architecture and training loop to test the mathematical logic before migrating to the structured template.
 
-## Part D: Data Preparation & Vocabulary
-To ensure a fair comparison, both models share the exact same preprocessing pipeline, vocabulary, and data splits.
+### 2. `start_code/assignment_part_B_starter.ipynb`
+This is the official, final deliverable for the mandatory Part B of the assignment. It uses the structured, object-oriented approach provided via the professor's starter code. It contains:
+* **Numericalization & Datasets:** Custom `NextTokenStreamDataset` classes and PyTorch `DataLoader` setups to create sequential input/target pairs.
+* **RNN Architecture:** A custom `RNNLanguageModel` class utilizing `nn.Embedding`, `nn.RNN` (`batch_first=True`), and `nn.Linear` layers.
+* **Training & Evaluation:** A robust training loop computing Cross-Entropy Loss and perplexity. 
+* **Text Generation:** Custom functions to sample the next token and generate sequences of 30+ tokens.
 
-* **Dataset:** NLTK Brown corpus (`categories='news'`).
-* **Preprocessing:** Tokens were lowercased, punctuation-only tokens were removed, and stopwords were retained. Special tokens (`<bos>`, `<eos>`, `<unk>`) were added to robustly handle boundaries and unknown words.
-* **Data Split:** The data was strictly split by **sentence** (not by token) to prevent data leakage across splits. The split ratio used was 80% Train, 10% Validation, and 10% Test.
-* **Vocabulary:** Built exclusively from the training split with a minimum frequency (`min_freq`) of 2, resulting in a vocabulary size of 5,353 tokens.
+## Methodology & Key Findings
 
-**Key Finding:** Splitting by sentence rather than by token is a critical step to ensure that fragments of the same sequence do not artificially inflate test performance.
+### Data Preparation
+* **Leakage Prevention:** Data was split by **sentence** (80% Train, 10% Validation, 10% Test) rather than by token to ensure fragments of the same sequence did not artificially inflate test performance.
 
----
+### Statistical Model Performance
+* The Trigram model achieved a test perplexity of ~1590. 
+* **Analysis:** It captured local grammar syntax well (e.g., generating highly accurate short noun phrases) but failed at global coherence, frequently shifting topics abruptly due to its inability to track long-range dependencies.
 
-## Part A: Statistical Trigram Language Model
-A baseline trigram model was trained using the `nltk.lm` library.
-
-* **Smoothing:** Laplace (Add-1) smoothing was applied to assign a small, non-zero probability to unseen n-grams, preventing infinite perplexity when encountering new word sequences.
-* **Perplexity:** * Validation Perplexity: 1647.92
-  * Test Perplexity: 1590.38
-* **Text Generation Analysis:** The generated text samples are locally grammatical (e.g., "the potato chip industry"), demonstrating that trigrams successfully capture short syntax. However, the model lacks global coherence and long-range dependency, frequently shifting topics abruptly mid-sentence.
-
----
-
-## Part B: Neural Language Model (RNN)
-A custom Recurrent Neural Network was implemented using PyTorch, trained using a next-token prediction format.
-
-* **Architecture:** * `nn.Embedding` (Dimension: 128)
-  * `nn.RNN` (Hidden Dimension: 256, `batch_first=True`)
-  * `nn.Linear` (Output Dimension: 5,353)
-* **Total Parameters:** ~2.15 Million
-* **Perplexity:**
-  * Final Test Perplexity: 5939.77
-* **Training Analysis (Overfitting):** While the training loss steadily dropped to 0.51, the validation and test perplexities exploded. This indicates severe overfitting. Because the model is highly parameterized but trained on a very small dataset (~4,600 sentences), it memorized the training sequences rather than learning generalizable patterns. 
-* **Text Generation Analysis:** The RNN text generation showed repetitive looping behaviors (e.g., repeating "and mrs. [name]" multiple times). It struggled with long-range dependencies, failing to resolve the subject of the sentence and relying heavily on local, repetitive patterns.
-
----
-
-## Conclusion
-For small datasets like the Brown news category, a smoothed Statistical N-gram model significantly outperforms a simple, unregularized RNN in terms of test perplexity. The RNN requires either a much larger dataset or strong regularization techniques (like Dropout or weight decay) to prevent overfitting and improve generalization.
+### Neural Model Performance (Overfitting)
+* The PyTorch RNN achieved an excellent training loss (0.38) but a skyrocketing test perplexity (~15749). 
+* **Analysis:** This proves that a highly parameterized RNN (~2.1 Million parameters) will severely overfit when trained on a small dataset (~4,600 sentences) without heavy regularization (like Dropout or weight decay). 
+* **Text Generation:** When forced to generate 30+ tokens (ignoring `<eos>`), the RNN showed repetitive looping behaviors and completely failed to maintain a logical thought, highlighting the limitations of simple, unregularized RNNs for robust text generation.
 
 - Completed with the help of google colab and Gemini
